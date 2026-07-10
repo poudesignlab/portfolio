@@ -4498,11 +4498,28 @@
     });
   });
 
-  // Back to top button
+  // Back to top button — animated manually so it stays smooth even if the
+  // OS/browser has "reduce motion" turned on (which silently forces native
+  // smooth-scroll to jump instantly instead).
+  function smoothScrollTo(targetY, duration){
+    var startY = window.pageYOffset || document.documentElement.scrollTop;
+    var distance = targetY - startY;
+    var startTime = null;
+    function easeInOutQuad(t){ return t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2; }
+    function step(timestamp){
+      if (startTime === null) startTime = timestamp;
+      var elapsed = timestamp - startTime;
+      var progress = Math.min(elapsed / duration, 1);
+      window.scrollTo(0, startY + distance * easeInOutQuad(progress));
+      if (progress < 1) window.requestAnimationFrame(step);
+    }
+    window.requestAnimationFrame(step);
+  }
+
   var backToTopBtn = document.getElementById('backToTopBtn');
   if (backToTopBtn){
     backToTopBtn.addEventListener('click', function(){
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      smoothScrollTo(0, 600);
     });
   }
 })();
