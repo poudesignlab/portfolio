@@ -4558,6 +4558,12 @@
 
 /* ===== Case study viewer (multi-asset lightbox) ===== */
 .lb-box.cs-box { max-width: 1200px; padding: 24px; }
+.cs-layout {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 20px;
+  align-items: start;
+}
 .cs-main {
   position: relative;
   width: 100%;
@@ -4566,7 +4572,6 @@
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.08);
   overflow: hidden;
-  margin-bottom: 18px;
 }
 .cs-main iframe, .cs-main img {
   width: 100%; height: 100%; border: none; display: block; object-fit: contain; background: #0A0A0A;
@@ -4587,15 +4592,23 @@
 .cs-nav button:hover:not(:disabled) { background: rgba(255,255,255,0.14); }
 .cs-nav button:disabled { opacity: 0.35; cursor: default; }
 .cs-nav .cs-pageinfo { font-size: 13px; color: #ddd; font-variant-numeric: tabular-nums; padding: 0 4px; }
-.cs-strip {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-  gap: 12px;
+
+/* Vertical thumbnail rail */
+.cs-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+  padding-right: 4px;
 }
+.cs-rail::-webkit-scrollbar { width: 5px; }
+.cs-rail::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.12); border-radius: 100px; }
 .cs-thumb {
   position: relative;
+  width: 100%;
   aspect-ratio: 16 / 10;
-  border-radius: 10px;
+  border-radius: 8px;
   overflow: hidden;
   background: #141414;
   border: 1px solid rgba(255,255,255,0.08);
@@ -4603,8 +4616,9 @@
   transition: border-color 0.2s, transform 0.2s;
   padding: 0;
   font-family: inherit;
+  flex-shrink: 0;
 }
-.cs-thumb:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.25); }
+.cs-thumb:hover { transform: translateX(2px); border-color: rgba(255,255,255,0.25); }
 .cs-thumb.active {
   border-color: #8B5CF6;
   box-shadow: 0 0 0 2px rgba(139,92,246,0.4);
@@ -4621,15 +4635,29 @@
   position: absolute; bottom: 0; left: 0; right: 0;
   background: linear-gradient(0deg, rgba(0,0,0,0.85), transparent);
   color: #fff;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
-  padding: 16px 10px 8px;
+  padding: 14px 8px 6px;
   text-align: left;
   letter-spacing: 0.02em;
+  line-height: 1.2;
 }
-@media (max-width: 640px) {
-  .cs-strip { grid-template-columns: repeat(2, 1fr); }
-  .cs-nav { bottom: 8px; }
+
+/* On narrow screens: rail flips to a horizontal strip UNDER the main preview */
+@media (max-width: 720px) {
+  .cs-layout { grid-template-columns: 1fr; }
+  .cs-rail {
+    flex-direction: row;
+    max-height: none;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding-bottom: 4px;
+  }
+  .cs-thumb {
+    width: 140px;
+    flex-shrink: 0;
+  }
+  .cs-thumb:hover { transform: translateY(-2px); }
 }
 
 
@@ -5240,8 +5268,10 @@ a:focus-visible, button:focus-visible {
     document.getElementById('lbContent').innerHTML =
       '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
       '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
-      '<div class="cs-main" id="csMainContainer"></div>' +
-      '<div class="cs-strip">' + thumbsHtml + '</div>';
+      '<div class="cs-layout">' +
+        '<div class="cs-rail">' + thumbsHtml + '</div>' +
+        '<div class="cs-main" id="csMainContainer"></div>' +
+      '</div>';
 
     // Thumbnail click handlers
     document.querySelectorAll('.cs-thumb').forEach(function(btn){
