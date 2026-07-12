@@ -4556,6 +4556,83 @@
 .lb-pdf-download { border: 1px solid var(--border-strong, rgba(255,255,255,0.16)); color: var(--text-c, #fafafa); }
 .lb-pdf-download:hover { background: rgba(255,255,255,0.08); }
 
+/* ===== Case study viewer (multi-asset lightbox) ===== */
+.lb-box.cs-box { max-width: 1200px; padding: 24px; }
+.cs-main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  background: #0A0A0A;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.08);
+  overflow: hidden;
+  margin-bottom: 18px;
+}
+.cs-main iframe, .cs-main img {
+  width: 100%; height: 100%; border: none; display: block; object-fit: contain; background: #0A0A0A;
+}
+.cs-nav {
+  position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  background: rgba(10,10,10,0.72); backdrop-filter: blur(10px);
+  padding: 6px 12px; border-radius: 100px; z-index: 3;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+.cs-nav button {
+  background: transparent; color: #fff; border: none; padding: 6px 10px;
+  font-size: 14px; cursor: pointer; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  width: 32px; height: 32px;
+}
+.cs-nav button:hover:not(:disabled) { background: rgba(255,255,255,0.14); }
+.cs-nav button:disabled { opacity: 0.35; cursor: default; }
+.cs-nav .cs-pageinfo { font-size: 13px; color: #ddd; font-variant-numeric: tabular-nums; padding: 0 4px; }
+.cs-strip {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+.cs-thumb {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #141414;
+  border: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: border-color 0.2s, transform 0.2s;
+  padding: 0;
+  font-family: inherit;
+}
+.cs-thumb:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.25); }
+.cs-thumb.active {
+  border-color: #8B5CF6;
+  box-shadow: 0 0 0 2px rgba(139,92,246,0.4);
+}
+.cs-thumb-preview {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  color: rgba(255,255,255,0.4);
+  background: linear-gradient(135deg, rgba(139,92,246,0.15), rgba(59,130,246,0.15));
+}
+.cs-thumb-preview img { width: 100%; height: 100%; object-fit: cover; }
+.cs-thumb-preview .cs-thumb-icon { font-size: 22px; }
+.cs-thumb-label {
+  position: absolute; bottom: 0; left: 0; right: 0;
+  background: linear-gradient(0deg, rgba(0,0,0,0.85), transparent);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 16px 10px 8px;
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+@media (max-width: 640px) {
+  .cs-strip { grid-template-columns: repeat(2, 1fr); }
+  .cs-nav { bottom: 8px; }
+}
+
+
 /* ===== Hero load choreography ===== */
 .hero-badge, .hero-sub, .hero-cta, .hero-portrait-wrap {
   opacity: 0;
@@ -5033,6 +5110,8 @@ a:focus-visible, button:focus-visible {
 
   function closeLightbox(){
     lbOverlay.classList.remove("open");
+    var box = document.querySelector('#lbOverlay .lb-box');
+    if (box) box.classList.remove('cs-box');
     document.getElementById("lbContent").innerHTML = "";
   }
   document.getElementById("lbClose").addEventListener("click", closeLightbox);
@@ -5076,6 +5155,106 @@ a:focus-visible, button:focus-visible {
     lbOverlay.classList.add("open");
   }
 
+  /* ---------- Case study viewer (multi-asset) ---------- */
+  function parseAssets(p){
+    var assets = [];
+    for (var i = 1; i <= 6; i++){
+      var label = (p['asset_' + i + '_label'] || '').trim();
+      var type = (p['asset_' + i + '_type'] || '').trim().toLowerCase();
+      var source = (p['asset_' + i + '_source'] || '').trim();
+      if (!label && !source) continue;
+      if (type !== 'pdf' && type !== 'images') continue;
+      if (!source) continue;
+      if (type === 'images'){
+        var files = source.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
+        if (!files.length) continue;
+        assets.push({ label: label || ('Asset ' + i), type: 'images', pages: files });
+      } else {
+        assets.push({ label: label || ('Asset ' + i), type: 'pdf', file: source });
+      }
+    }
+    return assets;
+  }
+
+  function renderCaseStudyMain(state){
+    var container = document.getElementById('csMainContainer');
+    var asset = state.assets[state.activeIdx];
+    var html;
+    if (asset.type === 'pdf'){
+      var src = 'assets/pdfs/' + asset.file + '#toolbar=1&navpanes=0';
+      html = '<iframe src="' + src + '" title="' + escapeHtml(asset.label) + '"></iframe>';
+    } else {
+      var page = asset.pages[state.pageIdx] || asset.pages[0];
+      html =
+        '<img src="assets/gallery/' + page + '" alt="' + escapeHtml(asset.label) + ' page ' + (state.pageIdx + 1) + '">' +
+        (asset.pages.length > 1
+          ? '<div class="cs-nav">' +
+              '<button id="csPrev" aria-label="Previous">‹</button>' +
+              '<span class="cs-pageinfo">' + (state.pageIdx + 1) + ' / ' + asset.pages.length + '</span>' +
+              '<button id="csNext" aria-label="Next">›</button>' +
+            '</div>'
+          : '');
+    }
+    container.innerHTML = html;
+
+    // Wire prev/next for image sequences
+    var prev = document.getElementById('csPrev');
+    var next = document.getElementById('csNext');
+    if (prev && next){
+      prev.disabled = state.pageIdx === 0;
+      next.disabled = state.pageIdx === asset.pages.length - 1;
+      prev.onclick = function(){ if (state.pageIdx > 0){ state.pageIdx--; renderCaseStudyMain(state); } };
+      next.onclick = function(){ if (state.pageIdx < asset.pages.length - 1){ state.pageIdx++; renderCaseStudyMain(state); } };
+    }
+
+    // Update active thumbnail state
+    var thumbs = document.querySelectorAll('.cs-thumb');
+    thumbs.forEach(function(t, i){ t.classList.toggle('active', i === state.activeIdx); });
+  }
+
+  function openCaseStudyLightbox(p){
+    var assets = parseAssets(p);
+    if (!assets.length) return;
+
+    var state = { assets: assets, activeIdx: 0, pageIdx: 0 };
+
+    var thumbsHtml = assets.map(function(a, i){
+      var preview;
+      if (a.type === 'images'){
+        preview = '<div class="cs-thumb-preview"><img src="assets/gallery/' + a.pages[0] + '" alt=""></div>';
+      } else {
+        preview = '<div class="cs-thumb-preview"><span class="cs-thumb-icon">📄</span></div>';
+      }
+      return '<button class="cs-thumb' + (i === 0 ? ' active' : '') + '" data-idx="' + i + '">' +
+               preview +
+               '<div class="cs-thumb-label">' + escapeHtml(a.label) + '</div>' +
+             '</button>';
+    }).join('');
+
+    var lbBox = document.querySelector('#lbOverlay .lb-box');
+    lbBox.classList.add('cs-box');
+
+    document.getElementById('lbContent').innerHTML =
+      '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
+      '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
+      '<div class="cs-main" id="csMainContainer"></div>' +
+      '<div class="cs-strip">' + thumbsHtml + '</div>';
+
+    // Thumbnail click handlers
+    document.querySelectorAll('.cs-thumb').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        var idx = parseInt(btn.getAttribute('data-idx'), 10);
+        if (idx === state.activeIdx) return;
+        state.activeIdx = idx;
+        state.pageIdx = 0;
+        renderCaseStudyMain(state);
+      });
+    });
+
+    renderCaseStudyMain(state);
+    lbOverlay.classList.add("open");
+  }
+
   function renderProjects(projects){
     var grid = document.getElementById("projectsGrid");
     if (!grid) return;
@@ -5091,10 +5270,13 @@ a:focus-visible, button:focus-visible {
       var hasPdf = p.pdf && p.pdf.trim() !== "";
       var hasGallery = p.gallery && p.gallery.trim() !== "";
       var hasVideo = p.video_url && p.video_url.trim() !== "";
+      var caseStudyAssets = parseAssets(p);
+      var hasCaseStudy = caseStudyAssets.length > 0;
       var pvClass = "pv-" + (((idx) % 6) + 1);
 
       var badge = "";
-      if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
+      if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Case Study</div>';
+      else if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
       else if (hasVideo) badge = '<div class="pdf-badge">▶ Video</div>';
       else if (hasPdf) badge = '<div class="pdf-badge">📄 PDF</div>';
 
@@ -5117,7 +5299,10 @@ a:focus-visible, button:focus-visible {
       card.style.setProperty('--stagger', (idx * 0.12) + 's');
       card.innerHTML = cardInner + '<div class="card-glare"></div>';
 
-      if (hasGallery){
+      if (hasCaseStudy){
+        card.setAttribute("data-clickable", "true");
+        card.addEventListener("click", function(){ openCaseStudyLightbox(p); });
+      } else if (hasGallery){
         card.setAttribute("data-clickable", "true");
         card.addEventListener("click", function(){ openGalleryLightbox(p); });
       } else if (hasVideo){
