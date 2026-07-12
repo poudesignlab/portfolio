@@ -4625,7 +4625,8 @@
   background-size: 200% 100%;
   overflow: hidden;
   transition: transform 0.2s;
-  animation: embedGlow 2.2s ease-in-out infinite, embedShimmer 3s linear infinite;
+  animation: embedPulse 2.2s ease-in-out infinite, embedShimmer 3s linear infinite;
+  transform-origin: center;
 }
 .embed-actions a::before {
   content: '';
@@ -4638,11 +4639,18 @@
   pointer-events: none;
 }
 .embed-actions a:hover {
-  transform: translateY(-2px) scale(1.03);
+  transform: translateY(-2px) scale(1.06);
+  animation-play-state: paused;
 }
-@keyframes embedGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(139,92,246,0.55), 0 0 22px rgba(139,92,246,0.4); }
-  50%      { box-shadow: 0 0 0 8px rgba(139,92,246,0),   0 0 32px rgba(255,62,156,0.6); }
+@keyframes embedPulse {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(139,92,246,0.55), 0 0 22px rgba(139,92,246,0.4);
+  }
+  50% {
+    transform: scale(1.08);
+    box-shadow: 0 0 0 10px rgba(139,92,246,0), 0 0 40px rgba(255,62,156,0.7);
+  }
 }
 @keyframes embedShimmer {
   0%   { background-position: 0% 50%; }
