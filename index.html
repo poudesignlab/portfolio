@@ -4595,37 +4595,23 @@
 
 /* ===== Embed lightbox (external web app / live URL) ===== */
 .lb-box.embed-box {
-  max-width: none;
-  width: 100%;
-  height: 100%;
-  max-height: none;
-  padding: 20px;
+  max-width: none !important;
+  max-height: none !important;
+  width: 100% !important;
+  height: 100% !important;
+  padding: 20px !important;
+  overflow: hidden !important;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
 }
 .lb-box.embed-box .lb-title { margin-bottom: 2px; flex-shrink: 0; }
 .lb-box.embed-box .lb-sub { margin-bottom: 12px; flex-shrink: 0; }
-.embed-frame-wrap {
-  position: relative;
-  flex: 1 1 auto;
-  min-height: 0;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: #0A0A0A;
-}
-.embed-frame-wrap iframe {
-  width: 100%;
-  height: 100%;
-  border: none;
-  display: block;
-}
 .embed-actions {
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  margin-top: 10px;
+  margin-bottom: 12px;
   flex-shrink: 0;
 }
 .embed-actions a {
@@ -4637,6 +4623,23 @@
   transition: all 0.2s;
 }
 .embed-actions a:hover { background: rgba(255,255,255,0.08); }
+.embed-frame-wrap {
+  position: relative;
+  flex: 1 1 0;
+  min-height: 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #0A0A0A;
+}
+.embed-frame-wrap iframe {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  width: 100%;
+  height: 100%;
+  border: none;
+  display: block;
+}
 .embed-fallback {
   position: absolute; inset: 0;
   display: none;
@@ -4670,8 +4673,14 @@
 }
 .embed-fallback a:hover { transform: translateY(-2px); }
 
-/* When an embed lightbox is open, override the overlay's inline padding
-   to give the lightbox the same visual margin all 4 sides. */
+.lb-box.embed-box #lbContent {
+  flex: 1 1 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 .lb-overlay.embed-open { padding: 24px; }
 
 /* Vertical thumbnail rail */
@@ -5266,6 +5275,9 @@ a:focus-visible, button:focus-visible {
     document.getElementById("lbContent").innerHTML =
       '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
       '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
+      '<div class="embed-actions">' +
+        '<a href="' + safeUrl + '" target="_blank" rel="noreferrer">Open in new tab ↗</a>' +
+      '</div>' +
       '<div class="embed-frame-wrap" id="embedFrameWrap">' +
         '<iframe id="embedFrame" src="' + safeUrl + '" title="' + escapeHtml(p.title) + '" allow="fullscreen"></iframe>' +
         '<div class="embed-fallback" id="embedFallback">' +
@@ -5273,9 +5285,6 @@ a:focus-visible, button:focus-visible {
           '<p>This site blocks embedded previews for security. Open it directly to explore the full experience.</p>' +
           '<a href="' + safeUrl + '" target="_blank" rel="noreferrer">Open in new tab ↗</a>' +
         '</div>' +
-      '</div>' +
-      '<div class="embed-actions">' +
-        '<a href="' + safeUrl + '" target="_blank" rel="noreferrer">Open in new tab ↗</a>' +
       '</div>';
 
     // Detect embed blocking. Some sites (X-Frame-Options / CSP frame-ancestors)
