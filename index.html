@@ -5162,15 +5162,16 @@ a:focus-visible, button:focus-visible {
       var label = (p['asset_' + i + '_label'] || '').trim();
       var type = (p['asset_' + i + '_type'] || '').trim().toLowerCase();
       var source = (p['asset_' + i + '_source'] || '').trim();
+      var thumb = (p['asset_' + i + '_thumb'] || '').trim();
       if (!label && !source) continue;
       if (type !== 'pdf' && type !== 'images') continue;
       if (!source) continue;
       if (type === 'images'){
         var files = source.split(',').map(function(s){ return s.trim(); }).filter(Boolean);
         if (!files.length) continue;
-        assets.push({ label: label || ('Asset ' + i), type: 'images', pages: files });
+        assets.push({ label: label || ('Asset ' + i), type: 'images', pages: files, thumb: thumb });
       } else {
-        assets.push({ label: label || ('Asset ' + i), type: 'pdf', file: source });
+        assets.push({ label: label || ('Asset ' + i), type: 'pdf', file: source, thumb: thumb });
       }
     }
     return assets;
@@ -5220,7 +5221,9 @@ a:focus-visible, button:focus-visible {
 
     var thumbsHtml = assets.map(function(a, i){
       var preview;
-      if (a.type === 'images'){
+      if (a.thumb){
+        preview = '<div class="cs-thumb-preview"><img src="assets/thumbnails/' + a.thumb + '" alt=""></div>';
+      } else if (a.type === 'images'){
         preview = '<div class="cs-thumb-preview"><img src="assets/gallery/' + a.pages[0] + '" alt=""></div>';
       } else {
         preview = '<div class="cs-thumb-preview"><span class="cs-thumb-icon">📄</span></div>';
