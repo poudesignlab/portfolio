@@ -4593,6 +4593,77 @@
 .cs-nav button:disabled { opacity: 0.35; cursor: default; }
 .cs-nav .cs-pageinfo { font-size: 13px; color: #ddd; font-variant-numeric: tabular-nums; padding: 0 4px; }
 
+/* ===== Embed lightbox (external web app / live URL) ===== */
+.lb-box.embed-box {
+  max-width: 96vw;
+  width: 96vw;
+  max-height: 92vh;
+  padding: 18px;
+  display: flex;
+  flex-direction: column;
+}
+.lb-box.embed-box .lb-title { margin-bottom: 2px; }
+.lb-box.embed-box .lb-sub { margin-bottom: 14px; }
+.embed-frame-wrap {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 60vh;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: #0A0A0A;
+}
+.embed-frame-wrap iframe {
+  width: 100%; height: 100%; border: none; display: block;
+}
+.embed-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+.embed-actions a {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: 100px;
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  border: 1px solid var(--border-strong, rgba(255,255,255,0.16));
+  color: var(--text-c, #fafafa);
+  transition: all 0.2s;
+}
+.embed-actions a:hover { background: rgba(255,255,255,0.08); }
+.embed-fallback {
+  position: absolute; inset: 0;
+  display: none;
+  align-items: center; justify-content: center;
+  flex-direction: column;
+  padding: 40px 24px; text-align: center;
+  background: #0A0A0A;
+  z-index: 5;
+}
+.embed-fallback.show { display: flex; }
+.embed-fallback h4 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 10px;
+  color: #fff;
+}
+.embed-fallback p {
+  color: var(--muted-c, #999);
+  font-size: 14px;
+  max-width: 420px;
+  margin: 0 0 22px;
+  line-height: 1.5;
+}
+.embed-fallback a {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 12px 24px; border-radius: 100px;
+  background: var(--text-c, #fafafa); color: #0A0A0A;
+  font-size: 14px; font-weight: 600; text-decoration: none;
+  transition: transform 0.2s;
+}
+.embed-fallback a:hover { transform: translateY(-2px); }
+
 /* Vertical thumbnail rail */
 .cs-rail {
   display: flex;
@@ -5139,7 +5210,10 @@ a:focus-visible, button:focus-visible {
   function closeLightbox(){
     lbOverlay.classList.remove("open");
     var box = document.querySelector('#lbOverlay .lb-box');
-    if (box) box.classList.remove('cs-box');
+    if (box){
+      box.classList.remove('cs-box');
+      box.classList.remove('embed-box');
+    }
     document.getElementById("lbContent").innerHTML = "";
   }
   document.getElementById("lbClose").addEventListener("click", closeLightbox);
@@ -5167,6 +5241,43 @@ a:focus-visible, button:focus-visible {
       (embedSrc
         ? '<div class="lb-video-wrap"><iframe src="' + embedSrc + '" title="' + escapeHtml(p.title) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'
         : '<p class="lb-pdf-note">Video link could not be read — check the video_url column in the sheet.</p>');
+    lbOverlay.classList.add("open");
+  }
+
+  function openEmbedLightbox(p){
+    var url = (p.embed_url || '').trim();
+    if (!url) return;
+    var safeUrl = url.replace(/"/g, '&quot;');
+    var lbBox = document.querySelector('#lbOverlay .lb-box');
+    lbBox.classList.add('embed-box');
+
+    document.getElementById("lbContent").innerHTML =
+      '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
+      '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
+      '<div class="embed-frame-wrap" id="embedFrameWrap">' +
+        '<iframe id="embedFrame" src="' + safeUrl + '" title="' + escapeHtml(p.title) + '" allow="fullscreen"></iframe>' +
+        '<div class="embed-fallback" id="embedFallback">' +
+          '<h4>Preview not available</h4>' +
+          '<p>This site blocks embedded previews for security. Open it directly to explore the full experience.</p>' +
+          '<a href="' + safeUrl + '" target="_blank" rel="noreferrer">Open in new tab ↗</a>' +
+        '</div>' +
+      '</div>' +
+      '<div class="embed-actions">' +
+        '<a href="' + safeUrl + '" target="_blank" rel="noreferrer">Open in new tab ↗</a>' +
+      '</div>';
+
+    // Detect embed blocking. Some sites (X-Frame-Options / CSP frame-ancestors)
+    // prevent load; we watch for a load event that never fires and show the fallback.
+    var frame = document.getElementById('embedFrame');
+    var loaded = false;
+    frame.addEventListener('load', function(){ loaded = true; });
+    setTimeout(function(){
+      if (!loaded){
+        var fb = document.getElementById('embedFallback');
+        if (fb) fb.classList.add('show');
+      }
+    }, 3500);
+
     lbOverlay.classList.add("open");
   }
 
@@ -5303,12 +5414,14 @@ a:focus-visible, button:focus-visible {
       var hasPdf = p.pdf && p.pdf.trim() !== "";
       var hasGallery = p.gallery && p.gallery.trim() !== "";
       var hasVideo = p.video_url && p.video_url.trim() !== "";
+      var hasEmbed = p.embed_url && p.embed_url.trim() !== "";
       var caseStudyAssets = parseAssets(p);
       var hasCaseStudy = caseStudyAssets.length > 0;
       var pvClass = "pv-" + (((idx) % 6) + 1);
 
       var badge = "";
-      if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Case Study</div>';
+      if (hasEmbed) badge = '<div class="pdf-badge">🌐 Live Site</div>';
+      else if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Case Study</div>';
       else if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
       else if (hasVideo) badge = '<div class="pdf-badge">▶ Video</div>';
       else if (hasPdf) badge = '<div class="pdf-badge">📄 PDF</div>';
@@ -5332,7 +5445,10 @@ a:focus-visible, button:focus-visible {
       card.style.setProperty('--stagger', (idx * 0.12) + 's');
       card.innerHTML = cardInner + '<div class="card-glare"></div>';
 
-      if (hasCaseStudy){
+      if (hasEmbed){
+        card.setAttribute("data-clickable", "true");
+        card.addEventListener("click", function(){ openEmbedLightbox(p); });
+      } else if (hasCaseStudy){
         card.setAttribute("data-clickable", "true");
         card.addEventListener("click", function(){ openCaseStudyLightbox(p); });
       } else if (hasGallery){
