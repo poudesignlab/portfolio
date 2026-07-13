@@ -3652,7 +3652,20 @@
 .project-client {
   font-size: 14px;
   color: var(--muted-c);
+  margin-bottom: 10px;
+}
+.project-description {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--muted-c);
   margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  opacity: 0.85;
 }
 .project-tags {
   display: flex;
@@ -5610,6 +5623,7 @@ a:focus-visible, button:focus-visible {
         '<div class="project-year">' + escapeHtml(p.year) + ' · ' + escapeHtml(p.client_tag || "") + '</div>' +
         '<div class="project-title">' + escapeHtml(p.title) + '</div>' +
         '<div class="project-client">' + escapeHtml(p.client) + '</div>' +
+        (p.description && p.description.trim() ? '<div class="project-description">' + escapeHtml(p.description.trim()) + '</div>' : '') +
         '<div class="project-tags">' + tags.map(function(t){ return '<span class="tag-pill">' + escapeHtml(t) + '</span>'; }).join("") + '</div>';
 
       var card = document.createElement("div");
