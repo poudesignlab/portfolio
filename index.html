@@ -5377,15 +5377,37 @@ a:focus-visible, button:focus-visible {
     lbOverlay.classList.add("open");
   }
 
+  function isInteractivePdf(p){
+    var v = (p.interactive_pdf || '').trim().toLowerCase();
+    return v === 'yes' || v === 'true' || v === '1' || v === 'y';
+  }
+
   function openPdfLightbox(p){
     var href = "assets/pdfs/" + p.pdf.trim();
+
+    if (isInteractivePdf(p)){
+      // Interactive PDFs need Adobe Reader — show the note + open/download buttons
+      document.getElementById("lbContent").innerHTML =
+        '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
+        '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
+        '<p class="lb-pdf-note">This PDF includes interactive buttons that only work in a desktop PDF reader (like Adobe Acrobat Reader) — browser tabs show it as a static document. Download it for the full interactive experience.</p>' +
+        '<div class="lb-pdf-actions">' +
+          '<a class="lb-pdf-open" href="' + href + '" target="_blank" rel="noreferrer">Open in Browser</a>' +
+          '<a class="lb-pdf-download" href="' + href + '" download>Download PDF</a>' +
+        '</div>';
+      lbOverlay.classList.add("open");
+      return;
+    }
+
+    // Regular PDFs — show them full-screen in the same big lightbox we use for case studies
+    var lbBox = document.querySelector('#lbOverlay .lb-box');
+    lbBox.classList.add('cs-box');
+    lbOverlay.classList.add('cs-open');
     document.getElementById("lbContent").innerHTML =
       '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
       '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
-      '<p class="lb-pdf-note">This PDF includes interactive buttons that only work in a desktop PDF reader (like Adobe Acrobat Reader) — browser tabs show it as a static document. Download it for the full interactive experience.</p>' +
-      '<div class="lb-pdf-actions">' +
-        '<a class="lb-pdf-open" href="' + href + '" target="_blank" rel="noreferrer">Open in Browser</a>' +
-        '<a class="lb-pdf-download" href="' + href + '" download>Download PDF</a>' +
+      '<div class="cs-main" style="flex:1 1 0; min-height:0;">' +
+        '<iframe src="' + href + '#toolbar=1&navpanes=0" title="' + escapeHtml(p.title) + '"></iframe>' +
       '</div>';
     lbOverlay.classList.add("open");
   }
@@ -5521,7 +5543,7 @@ a:focus-visible, button:focus-visible {
       else if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Case Study</div>';
       else if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
       else if (hasVideo) badge = '<div class="pdf-badge">▶ Video</div>';
-      else if (hasPdf) badge = '<div class="pdf-badge">📄 PDF</div>';
+      else if (hasPdf) badge = isInteractivePdf(p) ? '<div class="pdf-badge">⚡ Interactive PDF</div>' : '<div class="pdf-badge">📄 PDF</div>';
 
       var cardInner =
         '<div class="project-visual ' + pvClass + '">' +
