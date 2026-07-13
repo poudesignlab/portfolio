@@ -4556,6 +4556,20 @@
 /* Video embed — responsive 16:9 */
 .lb-video-wrap { position: relative; width: 100%; padding-bottom: 56.25%; height: 0; border-radius: 12px; overflow: hidden; }
 .lb-video-wrap iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+/* Vertical video player (TikTok, Reels) — centered 9:16 column */
+.lb-video-wrap.lb-video-vertical {
+  padding-bottom: 0;
+  height: min(80vh, 720px);
+  max-width: min(420px, 46vh);
+  margin: 0 auto;
+  background: #0A0A0A;
+}
+.lb-video-wrap.lb-video-vertical iframe {
+  position: relative;
+  inset: auto;
+  width: 100%;
+  height: 100%;
+}
 
 /* PDF note modal */
 .lb-pdf-note { font-size: 15px; color: #ddd; line-height: 1.6; margin-bottom: 24px; }
@@ -5353,10 +5367,25 @@ a:focus-visible, button:focus-visible {
     return div.innerHTML;
   }
 
+  function parseVideoUrl(url){
+    if (!url) return null;
+    url = url.trim();
+    // YouTube (watch, youtu.be, shorts, embed)
+    var yt = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
+    if (yt) return { platform: 'youtube', embedSrc: 'https://www.youtube.com/embed/' + yt[1], vertical: false };
+    // TikTok — any /video/{id} path
+    var tt = url.match(/tiktok\.com\/(?:@[^/]+\/)?(?:video|v)\/(\d+)/);
+    if (tt) return { platform: 'tiktok', embedSrc: 'https://www.tiktok.com/embed/v2/' + tt[1], vertical: true };
+    // Vimeo
+    var vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
+    if (vm) return { platform: 'vimeo', embedSrc: 'https://player.vimeo.com/video/' + vm[1], vertical: false };
+    return null;
+  }
+
+  // Kept for back-compat with any code that still calls extractYouTubeId
   function extractYouTubeId(url){
-    if (!url) return "";
-    var m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([A-Za-z0-9_-]{6,})/);
-    return m ? m[1] : "";
+    var v = parseVideoUrl(url);
+    return v && v.platform === 'youtube' ? v.embedSrc.split('/').pop() : "";
   }
 
   /* ---------- Lightbox modal (shared for gallery / video / pdf-note) ---------- */
@@ -5394,14 +5423,14 @@ a:focus-visible, button:focus-visible {
   }
 
   function openVideoLightbox(p){
-    var vid = extractYouTubeId(p.video_url);
-    var embedSrc = vid ? ("https://www.youtube.com/embed/" + vid) : "";
+    var v = parseVideoUrl(p.video_url);
+    var wrapClass = v && v.vertical ? 'lb-video-wrap lb-video-vertical' : 'lb-video-wrap';
     document.getElementById("lbContent").innerHTML =
       '<div class="lb-title">' + escapeHtml(p.title) + '</div>' +
       '<div class="lb-sub">' + escapeHtml(p.client) + '</div>' +
-      (embedSrc
-        ? '<div class="lb-video-wrap"><iframe src="' + embedSrc + '" title="' + escapeHtml(p.title) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'
-        : '<p class="lb-pdf-note">Video link could not be read — check the video_url column in the sheet.</p>');
+      (v
+        ? '<div class="' + wrapClass + '"><iframe src="' + v.embedSrc + '" title="' + escapeHtml(p.title) + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>'
+        : '<p class="lb-pdf-note">Video link could not be read — check the video_url column in the sheet. Supported: YouTube, TikTok, Vimeo.</p>');
     lbOverlay.classList.add("open");
   }
 
