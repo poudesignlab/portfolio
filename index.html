@@ -5329,7 +5329,7 @@ a:focus-visible, button:focus-visible {
 .award-stage {
   position: relative;
   height: 360px;
-  margin: 26px 0 110px;
+  margin: 26px 0 160px;
   cursor: grab;
 }
 .award-stage:active { cursor: grabbing; }
@@ -6830,14 +6830,14 @@ a:focus-visible, button:focus-visible {
 
     stageEl.addEventListener("pointerdown", function(e){
       if (!is3D()) return;
+      e.preventDefault();
       dragging = true;
       lastX = e.clientX;
       lastDx = 0;
       movedTotal = 0;
       inertia = 0;
-      try { stageEl.setPointerCapture(e.pointerId); } catch(err){}
     });
-    stageEl.addEventListener("pointermove", function(e){
+    document.addEventListener("pointermove", function(e){
       if (!dragging) return;
       var dx = e.clientX - lastX;
       lastX = e.clientX;
@@ -6854,8 +6854,8 @@ a:focus-visible, button:focus-visible {
         setTimeout(function(){ suppressClick = false; }, 250);
       }
     }
-    stageEl.addEventListener("pointerup", endDrag);
-    stageEl.addEventListener("pointercancel", endDrag);
+    document.addEventListener("pointerup", endDrag);
+    document.addEventListener("pointercancel", endDrag);
   }
 
 
