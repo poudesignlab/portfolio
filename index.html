@@ -5329,7 +5329,7 @@ a:focus-visible, button:focus-visible {
 .award-stage {
   position: relative;
   height: 360px;
-  margin: 26px 0 70px;
+  margin: 26px 0 110px;
   cursor: grab;
 }
 .award-stage:active { cursor: grabbing; }
@@ -6800,7 +6800,8 @@ a:focus-visible, button:focus-visible {
     }).join("");
 
     ringEl.querySelectorAll(".award-card3d").forEach(function(btn){
-      btn.addEventListener("click", function(){
+      btn.addEventListener("click", function(e){
+        if (suppressClick) return;
         openAwardModal(parseInt(btn.getAttribute("data-idx"), 10));
       });
     });
@@ -6848,7 +6849,7 @@ a:focus-visible, button:focus-visible {
       if (!dragging) return;
       dragging = false;
       inertia = (lastDx || 0) * 0.35;
-      if (movedTotal > 8){
+      if (movedTotal > 14){
         suppressClick = true;
         setTimeout(function(){ suppressClick = false; }, 250);
       }
@@ -6857,12 +6858,7 @@ a:focus-visible, button:focus-visible {
     stageEl.addEventListener("pointercancel", endDrag);
   }
 
-  if (ringEl){
-    /* If the pointer travelled (drag), swallow the click so a card doesn't open */
-    ringEl.addEventListener("click", function(e){
-      if (suppressClick){ e.stopPropagation(); e.preventDefault(); }
-    }, true);
-  }
+
 
   try {
     var visObs = new IntersectionObserver(function(entries){
