@@ -5691,7 +5691,10 @@ a:focus-visible, button:focus-visible {
     padding: 8px 4px 18px;
     scroll-snap-type: x mandatory;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
+  .award-ring::-webkit-scrollbar { display: none; }
   .award-card3d {
     position: relative;
     inset: auto;
@@ -5712,32 +5715,6 @@ a:focus-visible, button:focus-visible {
   .am-next { right: calc(50% - 62px); }
   .am-shell { max-height: 80vh; }
   .am-overlay { align-items: flex-start; padding-top: 7vh; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .recognition-badge-glow, .recognition-badge-ring, .recognition-badge-ring2 { animation: none; }
-  .recognition-number-circle { transition: opacity 0.4s ease; transform: none !important; opacity: 1; }
-  .am-shell::before { animation: none; }
-  .am-overlay, .am-shell { transition: opacity 0.25s ease; }
-  .am-shell { transform: none; }
-  #amSlide.am-in, #amSlide.am-in-right, #amSlide.am-in-left { animation: none; }
-  .award-stage { height: auto; margin: 20px 0 56px; cursor: default; }
-  .award-stage::after { display: none; }
-  .award-ring-center { position: relative; inset: auto; display: block; perspective: none; }
-  .award-ring {
-    width: auto; height: auto;
-    transform: none !important;
-    display: flex;
-    gap: 14px;
-    overflow-x: auto;
-    padding: 8px 4px 18px;
-  }
-  .award-card3d {
-    position: relative;
-    inset: auto;
-    transform: none !important;
-    flex: 0 0 250px;
-    min-height: 210px;
-  }
 }
 </style><noscript><style>.hero-badge,.hero-sub,.hero-cta,.hero .scroll-indicator,.hero-portrait-wrap,.hh-word,.reveal{opacity:1 !important;transform:none !important;}</style></noscript></head>
   <body>
@@ -6834,8 +6811,7 @@ a:focus-visible, button:focus-visible {
 
   /* ---------- Rotation engine (rAF): auto-spin, eased hover pause, drag with inertia ---------- */
   var mqlMobile = window.matchMedia ? window.matchMedia("(max-width: 860px)") : { matches: false };
-  var mqlReduce = window.matchMedia ? window.matchMedia("(prefers-reduced-motion: reduce)") : { matches: false };
-  function is3D(){ return !mqlMobile.matches && !mqlReduce.matches; }
+  function is3D(){ return !mqlMobile.matches; }
 
   var BASE_SPEED = 360 / 60000; /* one revolution per 60s, in deg/ms */
   var angle = 0, speed = 0, inertia = 0;
@@ -6906,7 +6882,7 @@ a:focus-visible, button:focus-visible {
         inertia *= 0.94;
         if (Math.abs(inertia) < 0.001) inertia = 0;
       }
-      ringEl.style.transform = "rotateY(" + angle.toFixed(3) + "deg)";
+      ringEl.style.transform = "rotateX(-7deg) rotateY(" + angle.toFixed(3) + "deg)";
     }
     window.requestAnimationFrame(spinLoop);
   }
