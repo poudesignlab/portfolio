@@ -5476,9 +5476,16 @@ a:focus-visible, button:focus-visible {
   -webkit-backdrop-filter: blur(16px);
   backdrop-filter: blur(16px);
 }
-.am-shell {
+.am-wrap {
   position: relative;
   max-width: 720px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.am-shell {
+  position: relative;
   width: 100%;
   max-height: 86vh;
   border-radius: 24px;
@@ -5567,8 +5574,8 @@ a:focus-visible, button:focus-visible {
   border-color: rgba(139,92,246,0.7);
   transform: translateY(-50%) scale(1.08);
 }
-.am-prev { left: -58px; }
-.am-next { right: -58px; }
+.am-prev { left: -56px; }
+.am-next { right: -56px; }
 #amSlide.am-in { animation: amIn 0.55s cubic-bezier(0.2, 0.9, 0.25, 1.12); }
 #amSlide.am-in-right { animation: amInR 0.45s cubic-bezier(0.2, 0.9, 0.25, 1); }
 #amSlide.am-in-left { animation: amInL 0.45s cubic-bezier(0.2, 0.9, 0.25, 1); }
@@ -6674,12 +6681,13 @@ a:focus-visible, button:focus-visible {
   var amOverlay = document.createElement("div");
   amOverlay.className = "am-overlay";
   amOverlay.innerHTML =
-    '<div class="am-shell" id="amShell" role="dialog" aria-modal="true" tabindex="-1">' +
-      '<button class="am-close" id="amClose" aria-label="Close">✕</button>' +
+    '<div class="am-wrap">' +
       '<button class="am-nav am-prev" id="amPrev" aria-label="Previous award">‹</button>' +
       '<button class="am-nav am-next" id="amNext" aria-label="Next award">›</button>' +
+      '<div class="am-shell" id="amShell" role="dialog" aria-modal="true" tabindex="-1">' +
+      '<button class="am-close" id="amClose" aria-label="Close">✕</button>' +
       '<div class="am-box" id="amBox"><div id="amSlide"></div></div>' +
-    '</div>';
+    '</div></div>';
   document.body.appendChild(amOverlay);
 
   var amShell = document.getElementById("amShell");
