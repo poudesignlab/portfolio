@@ -6529,11 +6529,13 @@ a:focus-visible, button:focus-visible {
       var hasEmbed = p.embed_url && p.embed_url.trim() !== "";
       var caseStudyAssets = parseAssets(p);
       var hasCaseStudy = caseStudyAssets.length > 0;
+      var allImages = hasCaseStudy && caseStudyAssets.every(function(a){ return a.type === 'images'; });
       var pvClass = "pv-" + (((idx) % 6) + 1);
 
       var badge = "";
       if (hasEmbed) badge = '<div class="pdf-badge">🌐 Live Site</div>';
-      else if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Case Study</div>';
+      else if (hasCaseStudy && allImages) badge = '<div class="pdf-badge">🖼 Image Gallery</div>';
+      else if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Gallery</div>';
       else if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
       else if (hasVideo) badge = '<div class="pdf-badge">▶ Video</div>';
       else if (hasPdf) badge = isInteractivePdf(p) ? '<div class="pdf-badge">⚡ Interactive PDF</div>' : '<div class="pdf-badge">📄 PDF</div>';
