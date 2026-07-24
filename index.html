@@ -5302,6 +5302,17 @@ a:focus-visible, button:focus-visible {
   font-size: 110px;
   line-height: 1;
   letter-spacing: -0.04em;
+  background: none;
+  -webkit-background-clip: initial;
+  background-clip: initial;
+  -webkit-text-fill-color: #FFFFFF;
+  color: #FFFFFF;
+  animation: none;
+  filter:
+    drop-shadow(0 0 6px rgba(255,255,255,0.35))
+    drop-shadow(0 0 16px rgba(255,62,156,0.65))
+    drop-shadow(0 0 34px rgba(139,92,246,0.6))
+    drop-shadow(0 0 60px rgba(59,130,246,0.45));
 }
 .recognition-number-label {
   font-size: 10px;
