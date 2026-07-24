@@ -6533,7 +6533,9 @@ a:focus-visible, button:focus-visible {
       var pvClass = "pv-" + (((idx) % 6) + 1);
 
       var badge = "";
-      if (hasEmbed) badge = '<div class="pdf-badge">🌐 Live Site</div>';
+      var customBadge = (p.badge_label || "").trim();
+      if (customBadge) badge = '<div class="pdf-badge">' + escapeHtml(customBadge) + '</div>';
+      else if (hasEmbed) badge = '<div class="pdf-badge">🌐 Live Site</div>';
       else if (hasCaseStudy && allImages) badge = '<div class="pdf-badge">🖼 Image Gallery</div>';
       else if (hasCaseStudy) badge = '<div class="pdf-badge">🗂 Gallery</div>';
       else if (hasGallery) badge = '<div class="pdf-badge">🖼 Gallery</div>';
